@@ -3,11 +3,14 @@ name = "dlan-cast"
 version = "0.1.0"
 description = ""
 authors = ["weihong.xu <xuweihong.cn@gmail.com>"]
+packages = [{include = "dlan_cast"}]
+
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 fire = "^0.4.0"
 upnpclient = "^1.0.3"
+python-dotenv = "^0.21.0"
 
 [tool.poetry.dev-dependencies]
 
