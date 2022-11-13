@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "dlan-cast"
+name = "dlna-cast"
 version = "0.1.0"
 description = ""
 authors = ["weihong.xu <xuweihong.cn@gmail.com>"]
-packages = [{include = "dlan_cast"}]
+packages = [{include = "dlna_cast"}]
 
 
 [tool.poetry.dependencies]
