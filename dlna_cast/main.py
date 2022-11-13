@@ -1,6 +1,7 @@
 import os
 from os.path import join, expanduser
 import subprocess as sp
+import shutil
 import http.server
 import threading
 from time import sleep
@@ -55,10 +56,11 @@ class WinCast:
         audio_option = 'audio="{audio_input}"'.format(audio_input=audio_input)
         cmd = [
             self.ffmpeg_bin, '-hide_banner',
-            '-f', 'gdigrab', '-i', 'desktop', '-framerate', str(
-                framerate), '-c:v', 'h264',
+            '-f', 'gdigrab', '-i', 'desktop', '-framerate', str(framerate),
             '-f', 'dshow', '-i', audio_option,
-            '-f', 'hls', '-hls_list_size', '5', '-hls_flags', 'delete_segments',
+            '-vf scale=848:480',
+            '-c:v', 'libx264', '-preset', 'ultrafast', '-qp', '0',
+            '-f', 'hls', '-hls_list_size', '3', '-hls_flags', 'delete_segments',
             join(self.dlna_cast_dir, 'index.m3u8'),
         ]
         cmd = ' '.join(cmd)
@@ -72,6 +74,7 @@ class WinCast:
         self._ffmpeg_process = None
 
     def screen_cast(self, audio_input=None, dlna_device=None, framerate=30):
+        shutil.rmtree(self.dlna_cast_dir, ignore_errors=True)
         os.makedirs(self.dlna_cast_dir, exist_ok=True)
         thread = threading.Thread(target=self._start_http_server, daemon=True)
         thread.start()
