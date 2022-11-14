@@ -27,13 +27,13 @@ FFMPEG_BIN=D:\ffmpeg\ffmpeg.exe
 FFMPEG_HOME=D:\ffmpeg
 ```
 
-You can also use the `set_env` command to update the '.env' file.
+You can also use the `set_env` command to update the `.env` file.
 
 ```bash
 dlna-cast set_env FFMPEG_HOME "D:\ffmpeg"
 ```
 
-### Install Screen Capturer Recorder for Windows
+### Install ScreenCapturerRecorder on Windows
 Though `ffmpeg` is shipped with `gdigrab` to capture screens on Windows, its performance is terrible when frame rate is high. `dlna-cast` uses ScreenCapturerRecorder for the sake of performance. You need to [download](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases) and install it before starting to use this tool.
 
 ## Get Started
@@ -51,11 +51,11 @@ And now you can cast your screen to one of the found devices by running the foll
 dlna-cast screen --dlna_device HuaweiPro
 ``` 
 
-Or you can also set `DLNA_DEVICE` in the '.env' file so that you can skip to set `--dlna_device` next time.
+Or you can also set `DLNA_DEVICE` in the `.env` file so that you can skip to set `--dlna_device` next time.
 
 ```bash
 dlna-cast set_env DLNA_DEVICE HuaweiPro
 dlna-cast screen
 ```
 
-You can stop casting by using `Ctrl+C` to stop the command. 
+You can stop casting by pressing `Ctrl+C`. 
