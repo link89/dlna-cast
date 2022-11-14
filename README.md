@@ -6,7 +6,7 @@ A cross-platform command-line tool that casts screen and media file to remote DL
 
 This tool is supposed to be cross-platform but currently I don't have a Linux or MacOS device at hand so it can only run on Windows now. It won't be hard to support other platforms though, as there are no platform specific dependencies.
 
-HLS is chosen just because it is easy to implement. But the problem of HLS is its high latency (5-10s) so it's definitely not for scenarios that require low latency (presentation for example).  As a trade-off the streaming quality exceeds a lot of software cast solutions(Lebocast) that have been tested by myself, which make it pretty good to stream music or video playing from your PC to TV.
+HLS is chosen just because it is easy to implement. But the problem of HLS is its high latency (up to 5-10s or more) so it's definitely not for scenarios that require low latency (presentation for example). But as a trade-off the streaming quality exceeds a lot of software screen-casting solutions (Lebocast for example) that have been tested by myself, which make it pretty good to stream music or video playing from your PC to TV.
 
 ## Install
 ```bash
@@ -34,7 +34,7 @@ dlna-cast set_env FFMPEG_HOME "D:\ffmpeg"
 ```
 
 ### Install Screen Capturer Recorder for Windows
-Though `ffmpeg` has been shipped with `gdigrab` to capture screens on Windows, its performance is terrible when frame rate is high. `dlna-cast` uses ScreenCapturerRecorder for better performance. You need to [download](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases) and install it before starting to use this tool.
+Though `ffmpeg` is shipped with `gdigrab` to capture screens on Windows, its performance is terrible when frame rate is high. `dlna-cast` uses ScreenCapturerRecorder for the sake of performance. You need to [download](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases) and install it before starting to use this tool.
 
 ## Get Started
 Before you start to stream your screen to remote devices that support DLNA protocol, you need to discover available devices in your LAN by running the following command.
