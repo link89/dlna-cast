@@ -15,6 +15,8 @@ from .ssdp import discover
 load_dotenv()
 USER_HOME = expanduser("~")
 
+def get_env_or_opt(opt, env_name):
+    return opt or os.getenv(env_name)
 
 class WinCast:
 
@@ -52,14 +54,15 @@ class WinCast:
             print("HTTP: start to serving at port", self._listen_port)
             httpd.serve_forever()
 
-    def _start_ffmpeg_streaming(self, framerate=30, scale='848:480', input_options=''):
-        input_options = input_options or '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
+    def _start_ffmpeg_streaming(self, framerate=30, scale='848:480', input_opts='', h264_opts='' ):
+        input_opts = input_opts or '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
+        h264_opts = h264_opts or '-c:v libx264 -preset fast -tune zerolatency -crf 21'
         cmd = [
             self.ffmpeg_bin, '-framerate', str(framerate),
-            input_options,
+            input_opts,
             '-vf format=yuv420p,scale=%s' % scale,
-            '-c:v libx264 -preset fast -qp 0',
-            '-f hls -hls_list_size 3 -hls_flags delete_segments',
+            h264_opts,
+            '-f hls -hls_time 2 -hls_list_size 5 -hls_flags delete_segments',
             join(self.dlna_cast_dir, 'index.m3u8'),
         ]
         cmd = ' '.join(cmd)
@@ -72,12 +75,20 @@ class WinCast:
         self._httpd = None
         self._ffmpeg_process = None
 
-    def screen(self, dlna_device=None, framerate=30, scale='848:480', input_options=None):
-
+    def screen(self, dlna_device=None, framerate=30, scale='848:480', input_opts=None, h264_opts=None):
         # start ffmpeg streaming
+        input_opts = get_env_or_opt(input_opts, 'FFMPEG_INPUT_OPTS')
+        h264_opts = get_env_or_opt(input_opts, 'FFMPEG_H264_OPTS')
+
         shutil.rmtree(self.dlna_cast_dir, ignore_errors=True)
         os.makedirs(self.dlna_cast_dir, exist_ok=True)
-        self._start_ffmpeg_streaming(framerate, scale, input_options)
+        self._start_ffmpeg_streaming(framerate, scale, input_opts, h264_opts)
+
+        # discover dlan_device
+        dlna_device = get_env_or_opt(dlna_device, 'DLNA_DEVICE')
+        assert dlna_device, 'dlna_device must be set!'
+        device = self._find_device(dlna_device)
+        assert device, 'cannot find deivce named {}'.format(dlna_device)
 
         # start http server for hls
         thread = threading.Thread(target=self._start_http_server, daemon=True)
@@ -86,18 +97,24 @@ class WinCast:
         while self._listen_port is None:
             sleep(1)  # TODO: use thread.Event instead
 
-        # cast video to remote
-        dlna_device = dlna_device or os.getenv('DLNA_DEVICE')
-        assert dlna_device, 'dlna_device must be set!'
-        device = self._find_device(dlna_device)
-        assert device, 'cannot find deivce named {}'.format(dlna_device)
-
+        # play video
+        hls_url = 'http://{}:{}/index.m3u8'.format( device.iface_ip, self._listen_port)
+        print('start to play {} on {}'.format(hls_url, device.friendly_name))
         device.AVTransport.SetAVTransportURI(
             InstanceID=0,
-            CurrentURI='http://{}:{}/index.m3u8'.format(
-                device.iface_ip, self._listen_port),
+            CurrentURI=hls_url,
             CurrentURIMetaData=''
         )
+
+        def stop_play_on_exit():
+            device.AVTransport.Stop(
+                InstanceID=0,
+            )
+            print('stop remote video')
+
+        atexit.register(stop_play_on_exit)
+
+        # wait for subprocess
         self._ffmpeg_process.wait()
 
     def list_dshow_devices(self):
