@@ -33,7 +33,7 @@ class WinCast:
         return os.getenv('DLNA_CAST_DIR', join(USER_HOME, 'dlna-cast'))
 
     def _get_devices(self):
-        devices = discover()
+        devices = discover(timeout=5)
         return [d for d in devices if d.find_action('SetAVTransportURI')]
 
     def _find_device(self, name):
@@ -52,15 +52,14 @@ class WinCast:
             print("HTTP: start to serving at port", self._listen_port)
             httpd.serve_forever()
 
-    def _start_ffmpeg_streaming(self, audio_input, framerate):
-        audio_option = 'audio="{audio_input}"'.format(audio_input=audio_input)
+    def _start_ffmpeg_streaming(self, framerate=30, scale='848:480', input_options=''):
+        input_options = input_options or '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
         cmd = [
-            self.ffmpeg_bin, '-hide_banner',
-            '-f', 'gdigrab', '-i', 'desktop', '-framerate', str(framerate),
-            '-f', 'dshow', '-i', audio_option,
-            '-vf scale=848:480',
-            '-c:v', 'libx264', '-preset', 'ultrafast', '-qp', '0',
-            '-f', 'hls', '-hls_list_size', '3', '-hls_flags', 'delete_segments',
+            self.ffmpeg_bin, '-framerate', str(framerate),
+            input_options,
+            '-vf format=yuv420p,scale=%s' % scale,
+            '-c:v libx264 -preset fast -qp 0',
+            '-f hls -hls_list_size 3 -hls_flags delete_segments',
             join(self.dlna_cast_dir, 'index.m3u8'),
         ]
         cmd = ' '.join(cmd)
@@ -73,20 +72,21 @@ class WinCast:
         self._httpd = None
         self._ffmpeg_process = None
 
-    def screen_cast(self, audio_input=None, dlna_device=None, framerate=30):
+    def screen(self, dlna_device=None, framerate=30, scale='848:480', input_options=None):
+
+        # start ffmpeg streaming
         shutil.rmtree(self.dlna_cast_dir, ignore_errors=True)
         os.makedirs(self.dlna_cast_dir, exist_ok=True)
+        self._start_ffmpeg_streaming(framerate, scale, input_options)
+
+        # start http server for hls
         thread = threading.Thread(target=self._start_http_server, daemon=True)
         thread.start()
 
         while self._listen_port is None:
             sleep(1)  # TODO: use thread.Event instead
 
-        audio_input = audio_input or os.getenv('AUDIO_INPUT')
-        assert audio_input, 'audio_input must be set!'
-
-        self._start_ffmpeg_streaming(audio_input, framerate)
-
+        # cast video to remote
         dlna_device = dlna_device or os.getenv('DLNA_DEVICE')
         assert dlna_device, 'dlna_device must be set!'
         device = self._find_device(dlna_device)
@@ -100,9 +100,9 @@ class WinCast:
         )
         self._ffmpeg_process.wait()
 
-    def list_ffmpeg_devices(self, device='dshow'):
+    def list_dshow_devices(self):
         cmd = [self.ffmpeg_bin, '-hide_banner',
-               '-list_devices', 'true', '-f', device, '-i', 'dummy']
+               '-list_devices', 'true', '-f', 'dshow', '-i', 'dummy']
         sp.call(cmd)
 
     def list_dlna_devices(self):
