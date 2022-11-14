@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dlna-cast"
-version = "0.1.1"
+version = "0.1.2"
 description = "A cross-platform command-line tool that casts screen and media file to remote DLNA device."
 authors = ["weihong.xu <xuweihong.cn@gmail.com>"]
 packages = [{include = "dlna_cast"}]
@@ -24,7 +24,7 @@ python-dotenv = "^0.21.0"
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-jenkins-fire-cli = "dlna_cast.main:main"
+dlna-cast = "dlna_cast.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
