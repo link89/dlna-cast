@@ -7,7 +7,9 @@ import threading
 from time import sleep
 
 from fire import Fire
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
+import shlex
+
 import atexit
 
 from .ssdp import discover
@@ -15,8 +17,10 @@ from .ssdp import discover
 load_dotenv()
 USER_HOME = expanduser("~")
 
+
 def get_env_or_opt(opt, env_name):
     return opt or os.getenv(env_name)
+
 
 class WinCast:
 
@@ -35,7 +39,7 @@ class WinCast:
         return os.getenv('DLNA_CAST_DIR', join(USER_HOME, 'dlna-cast'))
 
     def _get_devices(self):
-        devices = discover(timeout=5)
+        devices = discover(timeout=10)
         return [d for d in devices if d.find_action('SetAVTransportURI')]
 
     def _find_device(self, name):
@@ -54,15 +58,14 @@ class WinCast:
             print("HTTP: start to serving at port", self._listen_port)
             httpd.serve_forever()
 
-    def _start_ffmpeg_streaming(self, framerate=30, scale='848:480', input_opts='', h264_opts='' ):
+    def _start_ffmpeg_streaming(self, framerate=30, input_opts='', enc_opts=''):
         input_opts = input_opts or '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
-        h264_opts = h264_opts or '-c:v libx264 -preset fast -tune zerolatency -crf 21'
+        enc_opts = enc_opts or '-c:v libx264 -preset fast -tune zerolatency -crf 21 -vf format=yuv420p'
         cmd = [
             self.ffmpeg_bin, '-framerate', str(framerate),
             input_opts,
-            '-vf format=yuv420p,scale=%s' % scale,
-            h264_opts,
-            '-f hls -hls_time 2 -hls_list_size 5 -hls_flags delete_segments',
+            enc_opts,
+            '-f hls -hls_time 3 -hls_list_size 10 -hls_flags delete_segments',
             join(self.dlna_cast_dir, 'index.m3u8'),
         ]
         cmd = ' '.join(cmd)
@@ -75,14 +78,14 @@ class WinCast:
         self._httpd = None
         self._ffmpeg_process = None
 
-    def screen(self, dlna_device=None, framerate=30, scale='848:480', input_opts=None, h264_opts=None):
+    def screen(self, dlna_device=None, framerate=30, input_opts=None, enc_opts=None):
         # start ffmpeg streaming
         input_opts = get_env_or_opt(input_opts, 'FFMPEG_INPUT_OPTS')
-        h264_opts = get_env_or_opt(input_opts, 'FFMPEG_H264_OPTS')
+        enc_opts = get_env_or_opt(input_opts, 'FFMPEG_ENC_OPTS')
 
         shutil.rmtree(self.dlna_cast_dir, ignore_errors=True)
         os.makedirs(self.dlna_cast_dir, exist_ok=True)
-        self._start_ffmpeg_streaming(framerate, scale, input_opts, h264_opts)
+        self._start_ffmpeg_streaming(framerate, input_opts, enc_opts)
 
         # discover dlan_device
         dlna_device = get_env_or_opt(dlna_device, 'DLNA_DEVICE')
@@ -98,7 +101,8 @@ class WinCast:
             sleep(1)  # TODO: use thread.Event instead
 
         # play video
-        hls_url = 'http://{}:{}/index.m3u8'.format( device.iface_ip, self._listen_port)
+        hls_url = 'http://{}:{}/index.m3u8'.format(
+            device.iface_ip, self._listen_port)
         print('start to play {} on {}'.format(hls_url, device.friendly_name))
         device.AVTransport.SetAVTransportURI(
             InstanceID=0,
@@ -127,6 +131,19 @@ class WinCast:
         for d in devices:
             print(d.friendly_name)
 
+    def set_env(self, key, value=None):
+        config = dotenv_values('.env')
+        config[key] = value
+        lines = []
+        for k, v in config.items():
+            if v is not None:
+                lines.append(k + '=' + shlex.quote(str(v)))
+        with open('.env', 'w', encoding='utf8') as f:
+            f.write('\n'.join(lines))
+
+def main():
+    Fire(WinCast)
+
 
 if __name__ == '__main__':
-    Fire(WinCast)
+    main()
