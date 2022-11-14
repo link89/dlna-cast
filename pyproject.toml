@@ -1,10 +1,19 @@
 [tool.poetry]
 name = "dlna-cast"
 version = "0.1.0"
-description = ""
+description = "A cross-platform command-line tool that casts screen and media file to remote DLNA device."
 authors = ["weihong.xu <xuweihong.cn@gmail.com>"]
 packages = [{include = "dlna_cast"}]
-
+readme = "README.md"
+license = "GPLv3"
+keywords = ["DLNA", "ffmpeg"]
+include = [
+    "LICENSE",
+]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
