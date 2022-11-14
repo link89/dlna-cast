@@ -6,7 +6,7 @@ A cross-platform command-line tool that casts screen and media file to remote DL
 
 This tool is supposed to be cross-platform but currently I don't have a Linux or MacOS device at hand so it can only run on Windows now. It won't be hard to support other platforms though, as there are no platform specific dependencies.
 
-HLS is chosen just because it is easy to implement. But the problem of HLS is its high latency (up to 5-10s or more) so it's definitely not for scenarios that require low latency (presentation for example). But as a trade-off the streaming quality exceeds a lot of software screen-casting solutions (Lebocast for example) that have been tested by myself, which make it pretty good to stream music or video playing from your PC to TV.
+HLS is chosen just because it is easy to implement. But the problem of HLS is its high latency (up to 5-10s or more) so it's definitely not for scenarios that require low latency (presentation for example). But as a trade-off the streaming quality exceeds a lot of software-based screen-casting solutions (Lebocast for example) that have been tested by myself, which make it pretty good to stream music or video playing on your PC to the supported TV.
 
 ## Install
 ```bash
