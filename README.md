@@ -2,11 +2,11 @@
 A cross-platform command-line tool that casts screen and media file to remote DLNA device.
 
 ## Introduction
-`dlna-cast` uses `ffmpeg` to capture screen and audio, then convert them into HLS streams which could be served by a simple HTTP server. The HLS url will be send to the selected device via uPnP protocol and then you can watch you screen on the remote device (smart TV, typically).
+`dlna-cast` uses `ffmpeg` to capture screen and audio, then convert them into HLS streams which could be served by a simple HTTP server. The HLS url will be send to the selected device via uPnP protocol and the screen will be casted to the remote device (smart TV, typically).
 
-This tool is supposed to be cross-platform but currently I don't have a Linux or MacOS device at hand so it can only run on Windows now. It won't be hard to support other platforms though, as there are no platform specific dependencies.
+This tool is supposed to be cross-platform but currently I don't have a Linux or MacOS device at hand so it can only run on Windows now. It won't be hard to support other platforms though, as there is no platform specific dependencies.
 
-HLS is chosen just because it is easy to implement. But the problem of HLS is its high latency (up to 5-10s or more) so it's definitely not for scenarios that require low latency (presentation for example). But as a trade-off the streaming quality exceeds a lot of software-based screen-casting solutions (Lebocast for example) that have been tested by myself, which make it pretty good to stream music or video playing on your PC to the supported TV.
+HLS is chosen just because it is easy to implement. But the problem of HLS is its high latency (up to 5s or more) so it's definitely not for scenarios that require low latency (presentation for example). But as a trade-off the streaming quality exceeds a lot of software-based screen-casting solutions (Lebocast for example) that have been tested by myself, which make it pretty good to stream music or video playing on your PC to the supported TV.
 
 ## Install
 ```bash
@@ -35,7 +35,7 @@ dotenv list
 ```
 
 ### Install ScreenCapturerRecorder on Windows
-Though `ffmpeg` is shipped with `gdigrab` to capture screens on Windows, its performance is terrible when frame rate is high. `dlna-cast` uses ScreenCapturerRecorder for the sake of performance. You need to [download](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases) and install it before starting to use this tool.
+Though `ffmpeg` is shipped with `gdigrab` to capture screens on Windows, its performance is terrible when frame rate is high. `dlna-cast` uses ScreenCapturerRecorder for the sake of performance. You need to [download](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases) and install it before starting to cast.
 
 ## Get Started
 Before you start to stream your screen to remote devices that support DLNA protocol, you need to discover available devices in your LAN by running the following command.
@@ -59,4 +59,10 @@ dotenv set DLNA_DEVICE HuaweiPro
 dlna-cast screen
 ```
 
-You can stop casting by pressing `Ctrl+C`. 
+To stop casting just press `Ctrl+C`. 
+
+## TODO
+[ ] Support cast media file.
+[ ] Optimize devices discover.
+[ ] Optimize latency.
+[ ] Cross platform support.
