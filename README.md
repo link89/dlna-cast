@@ -62,7 +62,7 @@ dlna-cast screen
 To stop casting just press `Ctrl+C`. 
 
 ## TODO
-[ ] Support cast media file.
-[ ] Optimize devices discover.
-[ ] Optimize latency.
-[ ] Cross platform support.
+- [ ] Support cast media file.
+- [ ] Optimize devices discover.
+- [ ] Optimize latency.
+- [ ] Cross platform support.
