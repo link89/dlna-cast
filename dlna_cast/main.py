@@ -1,5 +1,5 @@
 import os
-from os.path import join, expanduser
+from os.path import join, expanduser, exists
 import subprocess as sp
 import shutil
 import http.server
@@ -39,7 +39,7 @@ class WinCast:
         return os.getenv('DLNA_CAST_DIR', join(USER_HOME, 'dlna-cast'))
 
     def _get_devices(self):
-        devices = discover(timeout=10)
+        devices = discover(timeout=3)
         return [d for d in devices if d.find_action('SetAVTransportURI')]
 
     def _find_device(self, name):
@@ -58,14 +58,19 @@ class WinCast:
             print("HTTP: start to serving at port", self._listen_port)
             httpd.serve_forever()
 
-    def _start_ffmpeg_streaming(self, framerate=30, input_opts='', enc_opts=''):
-        input_opts = input_opts or '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
-        enc_opts = enc_opts or '-c:v libx264 -preset fast -tune zerolatency -crf 21 -vf format=yuv420p'
+    def _start_ffmpeg_streaming(self, framerate=30, input_opts='', segment_size=1, crf=21):
+        input_opts = input_opts or (
+            '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
+        )
+        enc_opts = (
+            '-c:v libx264 -preset fast -tune zerolatency -crf {crf} -vf format=yuv420p '
+            '-keyint_min:v 1 -force_key_frames:v "expr:gte(t,n_forced*{segment_size})" '
+            '-f hls -hls_time {segment_size} -hls_list_size 10 -hls_flags delete_segments'
+        ).format(segment_size=segment_size, crf=crf)
+
         cmd = [
             self.ffmpeg_bin, '-framerate', str(framerate),
-            input_opts,
-            enc_opts,
-            '-f hls -hls_time 3 -hls_list_size 10 -hls_flags delete_segments',
+            input_opts, enc_opts,
             join(self.dlna_cast_dir, 'index.m3u8'),
         ]
         cmd = ' '.join(cmd)
@@ -78,14 +83,10 @@ class WinCast:
         self._httpd = None
         self._ffmpeg_process = None
 
-    def screen(self, dlna_device=None, framerate=30, input_opts=None, enc_opts=None):
-        # start ffmpeg streaming
-        input_opts = get_env_or_opt(input_opts, 'FFMPEG_INPUT_OPTS')
-        enc_opts = get_env_or_opt(input_opts, 'FFMPEG_ENC_OPTS')
-
+    def screen(self, dlna_device=None, framerate=30, input_opts=None, segment_size=2, crf=21):
+        # clean up
         shutil.rmtree(self.dlna_cast_dir, ignore_errors=True)
         os.makedirs(self.dlna_cast_dir, exist_ok=True)
-        self._start_ffmpeg_streaming(framerate, input_opts, enc_opts)
 
         # discover dlan_device
         dlna_device = get_env_or_opt(dlna_device, 'DLNA_DEVICE')
@@ -98,7 +99,13 @@ class WinCast:
         thread.start()
 
         while self._listen_port is None:
-            sleep(1)  # TODO: use thread.Event instead
+            sleep(0.1)  
+
+        # start ffmpeg streaming
+        input_opts = get_env_or_opt(input_opts, 'FFMPEG_INPUT_OPTS')
+        self._start_ffmpeg_streaming(framerate, input_opts, segment_size, crf)
+        while not exists(join(self.dlna_cast_dir, 'index.m3u8')):
+            sleep(0.1)
 
         # play video
         hls_url = 'http://{}:{}/index.m3u8'.format(
