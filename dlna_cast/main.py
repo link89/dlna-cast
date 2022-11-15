@@ -1,3 +1,4 @@
+import sys
 import os
 from os.path import join, expanduser, exists
 import subprocess as sp
@@ -22,7 +23,15 @@ def get_env_or_opt(opt, env_name):
     return opt or os.getenv(env_name)
 
 
-class WinCast:
+class BaseCast:
+
+    @property
+    def ffmpeg_name(self):
+        raise NotImplemented()
+
+    @property
+    def default_ffmpeg_input_opts(self):
+        raise NotImplemented()
 
     @property
     def ffmpeg_home(self):
@@ -30,8 +39,8 @@ class WinCast:
 
     @property
     def ffmpeg_bin(self):
-        default_bin = 'ffmpeg.exe' if self.ffmpeg_home is None else join(
-            self.ffmpeg_home, 'ffmpeg.exe')
+        default_bin = self.ffmpeg_name if self.ffmpeg_home is None else join(
+            self.ffmpeg_home, self.ffmpeg_name)
         return os.getenv('FFMPEG_BIN', default_bin)
 
     @property
@@ -59,9 +68,7 @@ class WinCast:
             httpd.serve_forever()
 
     def _start_ffmpeg_streaming(self, framerate=30, input_opts='', segment_size=1, crf=21):
-        input_opts = input_opts or (
-            '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
-        )
+        input_opts = input_opts or self.default_ffmpeg_input_opts
         enc_opts = (
             '-c:v libx264 -preset fast -tune zerolatency -crf {crf} -vf format=yuv420p '
             '-keyint_min:v 1 -force_key_frames:v "expr:gte(t,n_forced*{segment_size})" '
@@ -148,9 +155,41 @@ class WinCast:
         with open('.env', 'w', encoding='utf8') as f:
             f.write('\n'.join(lines))
 
-def main():
-    Fire(WinCast)
 
+class WinCast(BaseCast):
+    @property
+    def ffmpeg_name(self):
+        return 'ffmpeg.exe'
+
+    @property
+    def default_ffmpeg_input_opts(self):
+        return '-f dshow -i video="screen-capture-recorder":audio="virtual-audio-capturer"'
+
+class MacCast(BaseCast):
+    @property
+    def ffmpeg_name(self):
+        return 'ffmpeg'
+
+    @property
+    def default_ffmpeg_input_opts(self):
+        pass  # TODO
+
+class LinuxCast(BaseCast):
+    @property
+    def ffmpeg_name(self):
+        return 'ffmpeg'
+
+    @property
+    def default_ffmpeg_input_opts(self):
+        return  #TODO
+
+def main():
+    if sys.platform == 'darwin':
+        Fire(MacCast)
+    elif sys.platform == 'win32':
+        Fire(WinCast)
+    else:
+        Fire(LinuxCast)
 
 if __name__ == '__main__':
     main()
