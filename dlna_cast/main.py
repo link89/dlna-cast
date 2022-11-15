@@ -7,14 +7,14 @@ import threading
 from time import sleep
 
 from fire import Fire
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 import shlex
 
 import atexit
 
 from .ssdp import discover
 
-load_dotenv()
+load_dotenv(join(os.getcwd(), '.env'))
 USER_HOME = expanduser("~")
 
 
@@ -130,16 +130,6 @@ class WinCast:
         devices = self._get_devices()
         for d in devices:
             print(d.friendly_name)
-
-    def set_env(self, key, value=None):
-        config = dotenv_values('.env')
-        config[key] = value
-        lines = []
-        for k, v in config.items():
-            if v is not None:
-                lines.append(k + '=' + shlex.quote(str(v)))
-        with open('.env', 'w', encoding='utf8') as f:
-            f.write('\n'.join(lines))
 
 def main():
     Fire(WinCast)

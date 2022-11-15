@@ -27,10 +27,11 @@ FFMPEG_BIN=D:\ffmpeg\ffmpeg.exe
 FFMPEG_HOME=D:\ffmpeg
 ```
 
-You can also use the `set_env` command to update the `.env` file.
+You can also use the `dotenv set` command to update the `.env` file and use the `dotenv list` to check result.
 
 ```bash
-dlna-cast set_env FFMPEG_HOME "D:\ffmpeg"
+dotenv set FFMPEG_HOME "D:\ffmpeg"
+dotenv list
 ```
 
 ### Install ScreenCapturerRecorder on Windows
@@ -54,7 +55,7 @@ dlna-cast screen --dlna_device HuaweiPro
 Or you can also set `DLNA_DEVICE` in the `.env` file so that you can skip to set `--dlna_device` next time.
 
 ```bash
-dlna-cast set_env DLNA_DEVICE HuaweiPro
+dotenv set DLNA_DEVICE HuaweiPro
 dlna-cast screen
 ```
 
