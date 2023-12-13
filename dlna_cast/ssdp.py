@@ -9,6 +9,10 @@ from upnpclient.ssdp import (
     re,
     Device as _Device,
 )
+import os
+
+log = _getLogger("ssdp")
+log.disabled = os.environ.get('DEBUG') != '1'
 
 
 class Entry(object):
@@ -96,6 +100,5 @@ def discover(timeout=5):
         try:
             devices[entry.location] = Device(entry.location, iface_ip=entry.iface_ip)
         except Exception as exc:
-            log = _getLogger("ssdp")
             log.error("Error '%s' for %s", exc, entry)
     return list(devices.values())
