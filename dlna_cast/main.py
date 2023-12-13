@@ -2,6 +2,7 @@ import sys
 import os
 from os.path import join, expanduser, exists
 import subprocess as sp
+import shlex
 import shutil
 import http.server
 import threading
@@ -81,7 +82,7 @@ class BaseCast:
         ]
         cmd = ' '.join(cmd)
         print('run command: ', cmd)
-        self._ffmpeg_process = sp.Popen(cmd)
+        self._ffmpeg_process = sp.Popen(shlex.split(cmd))
         atexit.register(lambda: self._ffmpeg_process.kill())
 
     def __init__(self):
@@ -105,7 +106,7 @@ class BaseCast:
         thread.start()
 
         while self._listen_port is None:
-            sleep(0.1)  
+            sleep(0.1)
 
         # start ffmpeg streaming
         input_opts = get_env_or_opt(input_opts, 'FFMPEG_INPUT_OPTS')
@@ -169,7 +170,8 @@ class LinuxCast(BaseCast):
 
     @property
     def default_ffmpeg_input_opts(self):
-        return  #TODO
+        display = os.environ.get('DISPLAY')
+        return '-f x11grab -i %s' % display
 
 def main():
     if sys.platform == 'darwin':
