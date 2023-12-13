@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dlna-cast"
-version = "0.1.5"
+version = "0.1.6"
 description = "A cross-platform command-line tool that casts screen and media file to remote DLNA device."
 authors = ["weihong.xu <xuweihong.cn@gmail.com>"]
 packages = [{include = "dlna_cast"}]
