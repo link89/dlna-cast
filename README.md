@@ -1,4 +1,8 @@
 # dlna-cast
+[![PyPI version](https://badge.fury.io/py/dlna-cast.svg)](https://badge.fury.io/py/dlna-cast)
+[![Downloads](https://pepy.tech/badge/dlna-cast)](https://pepy.tech/project/dlna-cast)
+
+
 A cross-platform command-line tool that casts screen and media file to remote DLNA device.
 
 ## Introduction
