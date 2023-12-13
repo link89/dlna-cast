@@ -61,6 +61,15 @@ dlna-cast screen
 
 To stop casting just press `Ctrl+C`. 
 
+## FAQ
+
+### Linux Limitations
+The default `--input_opts` on `Linux` is `-f x11grab -i $DISPLAY`, which doesn't include capturing the audio. To support audio capture you may need to install loopback device first and then provide you own `--input_opts`, for example `--input_opts='-f x11grab -i $DISPLAY -f pulse -i name_of_your_device'`.
+
+### MacOS Limitations
+Not provide default `--input_opts` on `MacOS` yet. You need to provide your own `--input_opts`, for example `--input_opts='-f avfoundation -i 1:0`
+
+
 ## TODO
 - [ ] Support cast media file.
 - [ ] Optimize devices discover.
