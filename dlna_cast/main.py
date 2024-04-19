@@ -78,7 +78,7 @@ class BaseCast:
         cmd = [
             self.ffmpeg_bin, '-framerate', str(framerate),
             input_opts, enc_opts,
-            join(self.dlna_cast_dir, 'index.m3u8'),
+            '"'+join(self.dlna_cast_dir, 'index.m3u8"'),
         ]
         cmd = ' '.join(cmd)
         print('run command: ', cmd)
